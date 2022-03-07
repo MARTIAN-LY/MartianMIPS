@@ -1,5 +1,9 @@
 `include "define.vh"
 
+/* 
+    PC模块，给出指令的地址，并进行自增
+ */
+
 module pc_reg (
     input   wire    clk,
     input   wire    rst,

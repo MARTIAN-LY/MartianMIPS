@@ -1,7 +1,11 @@
 `include "define.vh"
 
-//if_id模块相当于 MAR ,用来暂存从pc中取到的指令地址
-//不仅仅相当于 MAR ,好像连 MDR 的功能也包含了
+/*  
+    if_id模块是 取指 和 译码 的中间模块。
+    作用好像有暂存从PC取出的地址，
+             暂存取到的指令，
+    这么说像是MAR和MDR？？？
+ */
 
 module if_id (
     input   wire    clk,

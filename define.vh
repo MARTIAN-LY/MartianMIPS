@@ -6,9 +6,24 @@
 `define ZeroWord 32'h0000_0000          //机器字长32位，定义32位的0
 
 
-//************  与具体指令有关的宏定义  ************
-`define EXE_ORI 6'b001101               //ORI指令的指令码
+//************  译码阶段的宏定义  ************
+`define AluOpBus    7:0                 //译码阶段的输出aluop_o的宽度
+`define AluSelBus   2:0                 //译码阶段的输出alusel_o的宽度
 
+
+
+//************  与具体指令有关的宏定义  ************
+`define EXE_ORI     6'b001101               //ORI指令的指令码
+`define EXE_NOP     6'b000000               //空指令
+
+//AluOp
+`define EXE_OR_OP   8'b0010_0101            //???
+`define EXE_NOP_OP  8'b0000_0000            //???
+
+
+//AluSel
+`define EXE_RES_LOGIC   3'b001              //???
+`define EXE_RES_NOP     3'b000              //???
 
 //************  与指令存储器ROM有关的宏定义  ************
 `define InstAddrBus 31:0                //ROM地址总线宽度是32位
@@ -18,7 +33,7 @@
 //************  与通用寄存器Regfile有关的寄存器
 `define RegAddrBus  4:0                 //Regfile模块地址线宽度，32个通用寄存器
 `define RegAddrNum  5                   //地址线5条
-`define RegDataBus  31:0                //Regfile模块数据线宽度，32位寄存器
-`define RegDataNum  32                  //数据32位                 
+`define RegAddr_0   5'b00000            //0号地址
+`define RegDataBus  31:0                //Regfile模块数据线宽度，32位寄存器             
 `define RegWidth    32                  //通用寄存器宽度32位
 `define RegNum      32                  //通用寄存器有32个

@@ -3,9 +3,7 @@
 
 module martianmips (
     input   wire    clk,
-    input   wire    rst,
-
-    input   wire[`RegBus]
+    input   wire    rst
 );
 
 endmodule //martianmips
