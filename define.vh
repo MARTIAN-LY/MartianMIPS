@@ -1,8 +1,8 @@
 //************  常用的宏定义  ************
-`define True 1
-`define False 0
-`define Enable 1
-`define Disable 0
+`define True     1'b1
+`define False    1'b0
+`define Enable   1'b1
+`define Disable  1'b0
 `define ZeroWord 32'h0000_0000          //机器字长32位，定义32位的0
 
 
@@ -16,14 +16,16 @@
 `define EXE_ORI     6'b001101               //ORI指令的指令码
 `define EXE_NOP     6'b000000               //空指令
 
-//AluOp
-`define EXE_OR_OP   8'b0010_0101            //???
-`define EXE_NOP_OP  8'b0000_0000            //???
-
-
 //AluSel
-`define EXE_RES_LOGIC   3'b001              //???
-`define EXE_RES_NOP     3'b000              //???
+`define EXE_RES_LOGIC   3'b001              //运算类型是逻辑运算
+`define EXE_RES_NOP     3'b000              //运算类型是空
+
+//AluOp
+`define EXE_OR_OP   8'b0010_0101            //具体运算类型是“逻辑或”
+`define EXE_NOP_OP  8'b0000_0000            //具体运算类型是空
+
+
+
 
 //************  与指令存储器ROM有关的宏定义  ************
 `define InstAddrBus 31:0                //ROM地址总线宽度是32位
