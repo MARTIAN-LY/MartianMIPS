@@ -49,18 +49,18 @@ end
     第二段：依据alusel_i指示的运算大类进行结果输出
  */
 always @(*) begin
-    if(rst) begin
-        result_o = `ZeroWord;
-    end else begin
-        case (alusel_i)
-            `EXE_RES_LOGIC: begin           //运算大类是逻辑运算
-                result_o = logic_out;       //把逻辑运算的结果输出
-            end
-            default:begin
-                result_o = `ZeroWord;
-            end
-        endcase
-    end
+    
+    waddr_o = waddr_i;
+    we_o    = we_i;
+    case (alusel_i)
+        `EXE_RES_LOGIC: begin           //运算大类是逻辑运算
+            result_o = logic_out;       //把逻辑运算的结果输出
+        end
+        default:begin
+            result_o = `ZeroWord;
+        end
+    endcase
+    
 end
 
 

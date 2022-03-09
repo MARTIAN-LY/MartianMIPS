@@ -10,7 +10,7 @@
  */
 module id (
     input   wire                rst,
-    input   wire[`InstAddrBus]  pc_i,       //指令地址
+    input   wire[`InstAddrBus]  pc_i,       //指令地址,暂时没用上啊
     input   wire[`InstBus]      inst_i,     //指令内容
 
     //读取Regfile
@@ -65,17 +65,16 @@ always @(*) begin
         raddr2_o  = `RegAddr_0;
         imme      = `ZeroWord;
     end else begin
-        // aluop_o   <= `EXE_NOP_OP;
-        // alusel_o  <= `EXE_RES_NOP;
-        // we_o      <= `Enable;           //写使能???
-        // waddr_o   <=  inst_i[15:11];    //结果地址????
-        // instvalid <= `True;
-        // re1_o     <= `Disable;          //Regfile的读使能1
-        // re2_o     <= `Disable;          //Regfile的读使能2
-        // raddr1_o  <= op1;               //读地址1
-        // raddr2_o  <= op2;               //读地址2
-        // imme      <= `ZeroWord;
-
+        aluop_o   = `EXE_NOP_OP;
+        alusel_o  = `EXE_RES_NOP;
+        we_o      = `Enable;           //写使能???
+        waddr_o   =  inst_i[15:11];    //结果地址????
+        instvalid = `True;
+        re1_o     = `Disable;          //Regfile的读使能1
+        re2_o     = `Disable;          //Regfile的读使能2
+        raddr1_o  = op1;               //读地址1
+        raddr2_o  = op2;               //读地址2
+        imme      = `ZeroWord;
         case (op)
             `EXE_ORI: begin                   //根据op的值判断是否是ori指令
                 instvalid = `True;           //ori是有效指令
@@ -90,7 +89,6 @@ always @(*) begin
             end
             default: begin
             end    
-        
         endcase
     end
 end

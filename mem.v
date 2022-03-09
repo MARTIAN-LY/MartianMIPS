@@ -26,7 +26,7 @@ always @(*) begin
     end else begin
         result_o = result_i;
         waddr_o  = waddr_i;
-        we_o     = `Enable;
+        we_o     = we_i;
     end
 end
 
