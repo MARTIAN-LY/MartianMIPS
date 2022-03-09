@@ -30,6 +30,8 @@
 //************  与指令存储器ROM有关的宏定义  ************
 `define InstAddrBus 31:0                //ROM地址总线宽度是32位
 `define InstBus     31:0                //ROM数据总线宽度
+`define InstMemNum  131071              //ROM实际大小是128KB，深度是2^17
+`define InstBusUsed 17                  //ROM实际使用的地址线宽度是17
 
 
 //************  与通用寄存器Regfile有关的寄存器
