@@ -27,8 +27,8 @@ wire[`InstAddrBus]  ifid_pc;
 //id模块的输入
 wire[`InstAddrBus]  id_pc;
 wire[`InstBus]      id_inst;
-wire[`RegAddrBus]   id_read1;
-wire[`RegAddrBus]   id_read2;
+wire[`RegAddrBus]   id_rdata1;
+wire[`RegAddrBus]   id_rdata2;
 
 
 //Regfile模块的输入
@@ -106,8 +106,8 @@ id id0(
     .re2_o(regfile_re2),
     .raddr1_o(regfile_raddr1),
     .raddr2_o(regfile_raddr2),
-    .rdata1_i(id_read1),
-    .rdata2_i(id_read2),     
+    .rdata1_i(id_rdata1),
+    .rdata2_i(id_rdata2),     
     
     //写入Regfile
     //现在结果还没出来，所以写结果不是id模块的事，把信号传给后面
@@ -179,7 +179,7 @@ ex ex0(
     .data1_i(ex_data1),
     .data2_i(ex_data2),
     .waddr_i(ex_waddr),
-    .we_i(we),
+    .we_i(ex_we),
 
     //执行的结果
     .we_o(exmem_we),
