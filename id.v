@@ -22,6 +22,7 @@ module id (
     input   wire[`RegDataBus]   rdata2_i,     
     
     //写入Regfile
+    //现在结果还没出来，所以写结果不是id模块的事，把信号传给后面
     output  reg                 we_o,
     output  reg[`RegAddrBus]    waddr_o,
 
