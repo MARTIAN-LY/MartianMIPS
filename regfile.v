@@ -30,7 +30,7 @@ module regfile (
 
 //32个32位通用寄存器
 //地址要不要设成0：`RegNum-1，会不会和大小端有关？？？
-reg [`RegWidth-1 : 0] regs[`RegNum-1 : 0];
+reg [`RegDataBus] regs[0 : `RegNum-1];
 
 
 /************************** 

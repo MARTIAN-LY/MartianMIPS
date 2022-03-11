@@ -16,11 +16,12 @@ module inst_rom(
 reg[`InstBus]   inst_mem[0:`InstMemNum-1];
 
 initial begin
-    $readmemh("inst_rom.data",inst_mem);
+    //用绝对路径
+    $readmemh("D:/study/verilog/MartianMIPS/code/inst_rom.data",inst_mem);
 end
 
 always @(*) begin
-    if(!ce) begin
+    if(~ce) begin
         inst = `ZeroWord;
     end else begin
         inst = inst_mem[ addr[`InstBusUsed+1 : 2] ];

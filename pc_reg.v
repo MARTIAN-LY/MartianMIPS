@@ -22,8 +22,9 @@ end
 
 
 always @(posedge clk ) begin
-    if(rst) begin
-        pc <= 0;
+    //这里改成rst挥
+    if(~ce) begin
+        pc <= `ZeroWord;
     end else begin
         pc <= pc + 4;                   //按字节寻址，一条指令32位，下一条指令地址 = 现地址 + 4
     end

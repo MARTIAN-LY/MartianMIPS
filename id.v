@@ -76,10 +76,10 @@ always @(*) begin
         raddr2_o  = op2;               //读地址2
         imme      = `ZeroWord;
         case (op)
-            `EXE_ORI: begin                   //根据op的值判断是否是ori指令
+            `EXE_ORI: begin                  //根据op的值判断是否是ori指令
                 instvalid = `True;           //ori是有效指令
-                aluop_o   = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
-                alusel_o  = `EXE_OR_OP;      //告诉ALU具体运算是逻辑或运算
+                aluop_o   = `EXE_OR_OP;      //告诉ALU运算类型是逻辑运算
+                alusel_o  = `EXE_RES_LOGIC;  //告诉ALU具体运算是逻辑或运算
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
                 raddr1_o  = op1;             //读端口1的源操作数地址
