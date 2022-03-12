@@ -118,7 +118,17 @@ id id0(
     .aluop_o(idex_aluop),
     .alusel_o(idex_alusel),
     .data1_o(idex_data1),
-    .data2_o(idex_data2)
+    .data2_o(idex_data2),
+
+    //用到上一条指令执行阶段的结果
+    .ex_we_i(exmem_we),
+    .ex_waddr_i(exmem_waddr),
+    .ex_wdata_i(exmem_result),
+
+    //用到上一条指令访存阶段的结果
+    .mem_we_i(memwb_we),
+    .mem_waddr_i(memwb_waddr),
+    .mem_wdata_i(memwb_result)
 );
 
 //Regfile模块例化
@@ -142,6 +152,7 @@ regfile regfile0(
     .re2(regfile_re2),
     .raddr_2(regfile_raddr2),
     .rdata_2(id_rdata2)
+
 );
 
 

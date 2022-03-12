@@ -20,6 +20,18 @@ module id (
     output  reg[`RegAddrBus]    raddr2_o,
     input   wire[`RegDataBus]   rdata1_i,
     input   wire[`RegDataBus]   rdata2_i,     
+
+
+    //解决下一条指令的数据冲突，把执行阶段的结果直接交给译码阶段
+    input   wire                ex_we_i,
+    input   wire[`RegAddrBus]   ex_waddr_i,
+    input   wire[`RegDataBus]   ex_wdata_i,
+
+    //解决隔一条指令的数据冲突，把访存阶段的结果直接交给译码阶段
+    input   wire                mem_we_i,
+    input   wire[`RegAddrBus]   mem_waddr_i,
+    input   wire[`RegDataBus]   mem_wdata_i,
+
     
     //写入Regfile
     //现在结果还没出来，所以写结果不是id模块的事，把信号传给后面
@@ -103,10 +115,20 @@ end
 always @(*) begin
     if(rst) begin
         data1_o = `ZeroWord;
+    end else if( re1_o && ex_we_i 
+                && raddr1_o == ex_waddr_i       //这条指令要用到上一条指令的运算结果
+                ) begin     
+        data1_o = ex_wdata_i;
+    end else if( re1_o && mem_we_i
+                && raddr1_o == mem_waddr_i      //这条指令要用到上上条指令的运算结果
+                ) begin   
+        data1_o = mem_wdata_i;
     end else if(re1_o) begin
-        data1_o = rdata1_i;
+        data1_o = rdata1_i;    
     end else if(~re1_o) begin
-        data1_o = imme;
+        data1_o = `ZeroWord;
+    end else begin
+        data1_o = `ZeroWord;
     end
 end
 
@@ -119,10 +141,20 @@ end
 always @(*) begin
     if(rst) begin
         data2_o = `ZeroWord;
+    end else if( re2_o && ex_we_i 
+                && raddr2_o == ex_waddr_i       //这条指令要用到上一条指令的运算结果
+                ) begin     
+        data2_o = ex_wdata_i;
+    end else if( re2_o && mem_waddr_i
+                && raddr2_o == mem_waddr_i      //这条指令要用到上上条指令的运算结果
+                ) begin    
+        data2_o = mem_wdata_i;
     end else if(re2_o) begin
-        data2_o = rdata2_i;
+        data2_o = rdata2_i;            
     end else if(~re2_o) begin
-        data2_o = imme;
+        data2_o = `ZeroWord;
+    end else begin
+        data2_o = `ZeroWord;
     end
 end
 

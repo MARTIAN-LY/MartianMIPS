@@ -49,7 +49,8 @@ reg [`RegDataBus] regs[0 : `RegNum-1];
  /***************************
             读操作1
     如果同时对一个寄存器进行读、写，
-    那么直接把写入的值读出
+    那么直接把写入的值读出，
+    这样解决了隔两条指令的数据冲突
  ***************************/
 
  always @(posedge clk ) begin
@@ -58,7 +59,7 @@ reg [`RegDataBus] regs[0 : `RegNum-1];
      end else if(raddr_1 == `RegAddr_0) begin
          rdata_1 <= 0;
      end else if(raddr_1 == waddr && we && re1) begin
-         rdata_1 <= wdata;                  //同时对一个寄存器读、写
+         rdata_1 <= wdata;                  //同时对一个寄存器读、写,直接把写的数据读出
      end else if(re1) begin
          rdata_1 <= regs[raddr_1];
      end else begin
