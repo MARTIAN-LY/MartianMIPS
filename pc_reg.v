@@ -22,7 +22,7 @@ end
 
 
 always @(posedge clk ) begin
-    //这里改成rst挥
+    //这里改成~rst会少读取一条
     if(~ce) begin
         pc <= `ZeroWord;
     end else begin

@@ -126,7 +126,7 @@ always @(*) begin
     end else if(re1_o) begin
         data1_o = rdata1_i;    
     end else if(~re1_o) begin
-        data1_o = `ZeroWord;
+        data1_o = imme;
     end else begin
         data1_o = `ZeroWord;
     end
@@ -152,7 +152,7 @@ always @(*) begin
     end else if(re2_o) begin
         data2_o = rdata2_i;            
     end else if(~re2_o) begin
-        data2_o = `ZeroWord;
+        data2_o = imme;
     end else begin
         data2_o = `ZeroWord;
     end
