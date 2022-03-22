@@ -48,10 +48,13 @@ module id (
 
 
 //对指令的操作码、地址码进行分解
-wire[5:0]   op  = inst_i[31:26];        //操作码
-wire[4:0]   op1 = inst_i[25:21];        //操作数 1 的地址
-wire[4:0]   op2 = inst_i[20:16];        //结果写入的地址
-wire[15:0]  op3 = inst_i[15:0];         //立即数的地址
+wire[5:0]   op     = inst_i[31:26];     // 指令码
+wire[4:0]   rs_ir  = inst_i[25:21];     // r型、i型操作数一
+wire[4:0]   rt_ir  = inst_i[20:16];     // r型操作数2，i型结果
+wire[4:0]   rd_r   = inst_i[15:11];     // r型结果
+wire[4:0]   sa_r   = inst_i[10:6];      // r型移位数
+wire[5:0]   func   = inst_i[5:0];       // 功能码
+wire[15:0]  imme_i = inst_i[15:0];      // i型立即数
 
 
 //保存扩展后的立即数
@@ -79,29 +82,204 @@ always @(*) begin
     end else begin
         aluop_o   = `EXE_NOP_OP;
         alusel_o  = `EXE_RES_NOP;
-        we_o      = `Enable;           //写使能???
-        waddr_o   =  inst_i[15:11];    //结果地址????
+        we_o      = `Enable;            //写使能
+        waddr_o   =  rd_r;              //默认目的寄存器地址
         instvalid = `True;
-        re1_o     = `Disable;          //Regfile的读使能1
-        re2_o     = `Disable;          //Regfile的读使能2
-        raddr1_o  = op1;               //读地址1
-        raddr2_o  = op2;               //读地址2
+        re1_o     = `Disable;           //Regfile的读使能1
+        re2_o     = `Disable;           //Regfile的读使能2
+        raddr1_o  = rs_ir;              //默认读地址1
+        raddr2_o  = rt_ir;              //默认读地址2
         imme      = `ZeroWord;
         case (op)
+            `EXE_SPECIAL: begin         //特殊指令码
+                case (sa_r)
+                    5'b00000: begin
+                        case (func)     //根据功能码识别操作
+                            `EXE_AND: begin                 //and
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_AND_OP;
+                                alusel_o  = `EXE_RES_LOGIC;
+                            end
+                            `EXE_OR: begin                  //or
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_OR_OP;
+                                alusel_o  = `EXE_RES_LOGIC;
+                            end
+                            `EXE_XOR: begin                 //xor
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_XOR_OP;
+                                alusel_o  = `EXE_RES_LOGIC;
+                            end
+                            `EXE_NOR: begin                 //nor
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_NOR_OP;
+                                alusel_o  = `EXE_RES_LOGIC;
+                            end
+                            `EXE_SLLV: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SLL_OP;
+                                alusel_o  = `EXE_RES_SHIFT;
+                            end
+                            `EXE_SRLV: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SRL_OP;
+                                alusel_o  = `EXE_RES_SHIFT;
+                            end
+                            `EXE_SRAV: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SRA_OP;
+                                alusel_o  = `EXE_RES_SHIFT;
+                            end
+                            /* sync指令用于保证载入、存储操作的顺序，
+                                对于OpenMIPS而言，
+                                是严格依照指令顺序运行的，载入、存储操作也是依照顺序进行的，
+                                所以能够将sync指令当作nop指令处理，在这里将其归纳为空指令。 */
+                            `EXE_SYNC: begin                //sync指令
+                                instvalid = `True;
+                                we_o      = `Disable;
+                                re1_o     = `Disable;
+                                re2_o     = `Enable;        //为什么要一个读端口？？？
+                                aluop_o   = `EXE_NOP_OP;
+                                alusel_o  = `EXE_RES_NOP;
+                            end
+                            default: begin
+                            end
+                            endcase
+                    end
+
+                    default: begin
+                    end
+                endcase
+            end
+                    
             `EXE_ORI: begin                  //根据op的值判断是否是ori指令
                 instvalid = `True;           //ori是有效指令
-                aluop_o   = `EXE_OR_OP;      //告诉ALU运算类型是逻辑运算
-                alusel_o  = `EXE_RES_LOGIC;  //告诉ALU具体运算是逻辑或运算
+                aluop_o   = `EXE_OR_OP;      //告诉ALU是或运算
+                alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
-                raddr1_o  = op1;             //读端口1的源操作数地址
-                imme      = {16'h0, op3};    //对立即数进行扩展
+                raddr1_o  = rs_ir;             //读端口1的源操作数地址
+                imme      = {16'h0, imme_i};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
-                waddr_o   = op2;             //结果写入的寄存器地址
+                waddr_o   = rt_ir;             //结果写入的寄存器地址
             end
+
+            `EXE_ANDI: begin                  //根据op的值判断是否是andi指令
+                instvalid = `True;           //andi是有效指令
+                aluop_o   = `EXE_AND_OP;      //告诉ALU是与运算
+                alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
+                re1_o     = `Enable;         //从读端口1读出源操作数
+                re2_o     = `Disable;        //读端口2用不到
+                raddr1_o  = rs_ir;             //读端口1的源操作数地址
+                imme      = {16'h0, imme_i};    //对立即数进行扩展
+                we_o      = `Enable;         //将结果写入目的寄存器，写使能
+                waddr_o   = rt_ir;             //结果写入的寄存器地址
+            end
+
+            `EXE_XORI: begin                  //根据op的值判断是否是xori指令
+                instvalid = `True;           //xori是有效指令
+                aluop_o   = `EXE_XOR_OP;      //告诉ALU是异或运算
+                alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
+                re1_o     = `Enable;         //从读端口1读出源操作数
+                re2_o     = `Disable;        //读端口2用不到
+                raddr1_o  = rs_ir;             //读端口1的源操作数地址
+                imme      = {16'h0, imme_i};    //对立即数进行扩展
+                we_o      = `Enable;         //将结果写入目的寄存器，写使能
+                waddr_o   = rt_ir;             //结果写入的寄存器地址
+            end
+
+            /* lui指令：将指令中的立即数左移16bit，
+                然后与 $0 寄存器 或 运算，
+                结果放入rt寄存器，
+                等价于把立即数左移 16 位放入 rt 寄存器
+             */
+            `EXE_LUI: begin                  //根据op的值判断是否是lui指令
+                instvalid = `True;           //lui是有效指令
+                aluop_o   = `EXE_OR_OP;      
+                alusel_o  = `EXE_RES_LOGIC;  
+                re1_o     = `Enable;         
+                re2_o     = `Disable;        
+                raddr1_o  = rs_ir;             
+                imme      = {imme_i, 16'h0};    //这里是左移
+                we_o      = `Enable;         
+                waddr_o   = rt_ir;             
+            end
+
+            /* pref指令用于缓存预取，
+                OpenMIPS没有实现缓存，
+                所以也能够将pref指令当作nop指令处理，
+                此处也将其归纳为空指令。 
+            */
+            `EXE_PREF: begin                  //根据op的值判断是否是prep指令
+                instvalid = `True;           
+                aluop_o   = `EXE_NOP_OP;      
+                alusel_o  = `EXE_RES_NOP;
+                we_o      = `Disable;  
+                re1_o     = `Disable;         
+                re2_o     = `Disable;        
+                raddr1_o  = rs_ir;                        
+            end
+
             default: begin
             end    
         endcase
+
+        //移位指令都是对第二个操作数移位的
+        if (inst_i[31:21] == 11'b00000000000) begin
+            case(sa_r)
+                `EXE_SLL: begin
+                    instvalid   = `True;
+                    aluop_o     = `EXE_SLL_OP;
+                    alusel_o    = `EXE_RES_SHIFT;
+                    we_o        = `Enable;
+                    re1_o       = `Disable;
+                    re2_o       = `Enable;
+                    waddr_o     = rd_r; 
+                end
+
+                `EXE_SRL: begin
+                    instvalid   = `True;
+                    aluop_o     = `EXE_SRL_OP;
+                    alusel_o    = `EXE_RES_SHIFT;
+                    we_o        = `Enable;
+                    re1_o       = `Disable;
+                    re2_o       = `Enable;
+                    waddr_o     = rd_r; 
+                end
+
+                `EXE_SRA: begin
+                    instvalid   = `True;
+                    aluop_o     = `EXE_SRA_OP;
+                    alusel_o    = `EXE_RES_SHIFT;
+                    we_o        = `Enable;
+                    re1_o       = `Disable;
+                    re2_o       = `Enable;
+                    waddr_o     = rd_r; 
+                end
+
+            endcase
+        end
     end
 end
 
