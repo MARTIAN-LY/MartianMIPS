@@ -247,8 +247,8 @@ always @(*) begin
 
         //移位指令都是对第二个操作数移位的
         if (inst_i[31:21] == 11'b00000000000) begin
-            case(sa_r)
-                `EXE_SLL: begin
+            case(func)
+                `EXE_SLL: begin                     //sll
                     instvalid   = `True;
                     aluop_o     = `EXE_SLL_OP;
                     alusel_o    = `EXE_RES_SHIFT;
@@ -256,9 +256,10 @@ always @(*) begin
                     re1_o       = `Disable;
                     re2_o       = `Enable;
                     waddr_o     = rd_r; 
+                    imme[4:0]   = sa_r;
                 end
 
-                `EXE_SRL: begin
+                `EXE_SRL: begin                     //srl
                     instvalid   = `True;
                     aluop_o     = `EXE_SRL_OP;
                     alusel_o    = `EXE_RES_SHIFT;
@@ -266,9 +267,10 @@ always @(*) begin
                     re1_o       = `Disable;
                     re2_o       = `Enable;
                     waddr_o     = rd_r; 
+                    imme[4:0]   = sa_r;
                 end
 
-                `EXE_SRA: begin
+                `EXE_SRA: begin                     //sra
                     instvalid   = `True;
                     aluop_o     = `EXE_SRA_OP;
                     alusel_o    = `EXE_RES_SHIFT;
@@ -276,6 +278,7 @@ always @(*) begin
                     re1_o       = `Disable;
                     re2_o       = `Enable;
                     waddr_o     = rd_r; 
+                    imme[4:0]   = sa_r;
                 end
 
             endcase
@@ -323,12 +326,12 @@ always @(*) begin
                 && raddr2_o == ex_waddr_i       //这条指令要用到上一条指令的运算结果
                 ) begin     
         data2_o = ex_wdata_i;
-    end else if( re2_o && mem_waddr_i
+    end else if( re2_o && mem_we_i
                 && raddr2_o == mem_waddr_i      //这条指令要用到上上条指令的运算结果
-                ) begin    
+                ) begin   
         data2_o = mem_wdata_i;
     end else if(re2_o) begin
-        data2_o = rdata2_i;            
+        data2_o = rdata2_i;    
     end else if(~re2_o) begin
         data2_o = imme;
     end else begin

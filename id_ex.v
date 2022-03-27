@@ -12,16 +12,16 @@
    input  wire     rst,
 
    //从译码阶段传过来的信息
-   input  wire[`AluOpBus]      id_aluop,   //操作类型
-   input  wire[`AluSelBus]     id_alusel,  //操作子类型
+   input  wire[`AluOpBus]      id_aluop,   //操作子类型
+   input  wire[`AluSelBus]     id_alusel,  //操作类型
    input  wire[`RegDataBus]    id_data1,   //操作数1
    input  wire[`RegDataBus]    id_data2,   //操作数2
    input  wire[`RegAddrBus]    id_waddr,   //写入地址
    input  wire                 id_we,      //写入使能
 
    //传给执行阶段的信息
-   output  reg[`AluOpBus]      ex_aluop,   //操作类型
-   output  reg[`AluSelBus]     ex_alusel,  //操作子类型
+   output  reg[`AluOpBus]      ex_aluop,   //操作子类型
+   output  reg[`AluSelBus]     ex_alusel,  //操作类型
    output  reg[`RegDataBus]    ex_data1,   //操作数1
    output  reg[`RegDataBus]    ex_data2,   //操作数2
    output  reg[`RegAddrBus]    ex_waddr,   //写入地址

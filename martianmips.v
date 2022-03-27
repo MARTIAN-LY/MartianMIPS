@@ -6,9 +6,8 @@
 
     译码id模块，
     执行ex模块，
-    访存mem模块（为什么存在？？？）
+    访存mem模块
         是组合逻辑
-        其余都是时序逻辑
  */
 
 module martianmips (
