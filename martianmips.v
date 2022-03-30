@@ -55,22 +55,45 @@ wire[`RegDataBus]  ex_data1;
 wire[`RegDataBus]  ex_data2;
 wire[`RegAddrBus]  ex_waddr;
 wire               ex_we;
+wire[`RegDataBus]   ex_hi_i;
+wire[`RegDataBus]   ex_lo_i;
+wire                ex_mem_whilo;    //上条指令访存部分是否要读写 hilo 模块
+wire[`RegDataBus]   ex_mem_hi;
+wire[`RegDataBus]   ex_mem_lo;
+wire                ex_wb_whilo;     //上上条指令回写部分是否要读写 hilo 模块
+wire[`RegDataBus]   ex_wb_hi;
+wire[`RegDataBus]   ex_wb_lo;
 
 //ex_mem模块的输入
 wire[`RegDataBus]   exmem_result;
 wire                exmem_we;
 wire[`RegAddrBus]   exmem_waddr;
+wire[`RegDataBus]   exmem_ex_hi;
+wire[`RegDataBus]   exmem_ex_lo;
+wire                exmem_ex_whilo;
+
 
 //mem模块输入
 wire[`RegDataBus]    mem_result;
 wire[`RegAddrBus]    mem_waddr;
 wire                 mem_we;
+wire[`RegDataBus]   mem_hi_i;
+wire[`RegDataBus]   mem_lo_i;
+wire                mem_whilo_i;
 
 //mem_wb模块的输入
 wire                memwb_we;
 wire[`RegAddrBus]   memwb_waddr;
 wire[`RegDataBus]   memwb_result;
+wire[`RegDataBus]   memwb_mem_hi;
+wire[`RegDataBus]   memwb_mem_lo;
+wire                memwb_mem_whilo;
 
+
+//hilo模块的输入
+wire hilo_we;
+wire[`RegDataBus]   hilo_hi_i;
+wire[`RegDataBus]   hilo_lo_i;
 
 //pc_reg模块例化
 pc_reg  pc_reg0(
@@ -178,7 +201,6 @@ id_ex id_ex0(
 );
 
 
-
 //ex模块例化
 ex ex0(
     .rst(rst),
@@ -194,9 +216,21 @@ ex ex0(
     //执行的结果
     .we_o(exmem_we),
     .waddr_o(exmem_waddr),
-    .result_o(exmem_result)  
-);
+    .result_o(exmem_result),
 
+    //因为读写hilo模块而新增的端口
+    .hi_i(ex_hi_i),
+    .lo_i(ex_lo_i),
+    .mem_whilo_i(ex_mem_whilo),    //上条指令访存部分是否要读写 hilo 模块
+    .mem_hi_i(ex_mem_hi),
+    .mem_lo_i(ex_mem_lo),
+    .wb_whilo_i(ex_wb_whilo),     //上上条指令回写部分是否要读写 hilo 模块
+    .wb_hi_i(ex_wb_hi),
+    .wb_lo_i(ex_wb_lo),
+    .whilo_o(exmem_ex_whilo),        //这条指令要不要读写 hilo 模块
+    .hi_o(exmem_ex_hi),
+    .lo_o(exmem_ex_lo)
+);
 
 
 //ex_mem模块例化
@@ -208,11 +242,17 @@ ex_mem ex_mem0(
     .ex_result(exmem_result),
     .ex_we(exmem_we),
     .ex_waddr(exmem_waddr),
+    .ex_hi(exmem_ex_hi),
+    .ex_lo(exmem_ex_lo),
+    .ex_whilo(exmem_ex_whilo),
 
     //送访存阶段的信息
     .mem_result(mem_result),
     .mem_we(mem_we),
-    .mem_waddr(mem_waddr)
+    .mem_waddr(mem_waddr),
+    .mem_hi(mem_hi_i),
+    .mem_lo(mem_lo_i),
+    .mem_whilo(mem_whilo_i)
 );
 
 
@@ -224,11 +264,17 @@ mem mem0(
     .result_i(mem_result),
     .waddr_i(mem_waddr),
     .we_i(mem_we),
+    .hi_i(mem_hi_i),
+    .lo_i(mem_lo_i),
+    .whilo_i(mem_whilo_i),
 
     //送到回写阶段的数据
     .result_o(memwb_result),
     .waddr_o(memwb_waddr),
-    .we_o(memwb_we)
+    .we_o(memwb_we),
+    .hi_o(memwb_mem_hi),
+    .lo_o(memwb_mem_lo),
+    .whilo_o(memwb_mem_whilo)
 );
 
 
@@ -241,11 +287,29 @@ mem_wb mem_wb0(
     .mem_we(memwb_we),
     .mem_waddr(memwb_waddr),
     .mem_result(memwb_result),
+    .mem_hi(memwb_mem_hi),
+    .mem_lo(memwb_mem_lo),
+    .mem_whilo(memwb_mem_whilo),
 
     //回写给Regfile模块的数据
     .wb_we(regfile_we),
     .wb_waddr(regfile_waddr),
-    .wb_result(regfile_wdata) 
+    .wb_result(regfile_wdata),
+    .wb_hi(hilo_hi_i),
+    .wb_lo(hilo_lo_i),
+    .wb_whilo(hilo_we)
+);
+
+
+//hilo模块例化
+hilo_reg hilo_reg0(
+    .clk(clk),
+    .rst(rst),
+    .we(hilo_we),
+    .hi_i(hilo_hi_i),
+    .lo_i(hilo_lo_i),
+    .hi_o(ex_hi_i),
+    .lo_o(ex_lo_i)
 );
 
 endmodule //martianmips

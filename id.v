@@ -49,10 +49,10 @@ module id (
 
 //对指令的操作码、地址码进行分解
 wire[5:0]   op     = inst_i[31:26];     // 指令码
-wire[4:0]   rs_ir  = inst_i[25:21];     // r型、i型操作数一
-wire[4:0]   rt_ir  = inst_i[20:16];     // r型操作数2，i型结果
-wire[4:0]   rd_r   = inst_i[15:11];     // r型结果
-wire[4:0]   sa_r   = inst_i[10:6];      // r型移位数
+wire[4:0]   rs     = inst_i[25:21];     // r型、i型操作数一
+wire[4:0]   rt     = inst_i[20:16];     // r型操作数2，i型结果
+wire[4:0]   rd     = inst_i[15:11];     // r型结果
+wire[4:0]   sa     = inst_i[10:6];      // r型移位数
 wire[5:0]   func   = inst_i[5:0];       // 功能码
 wire[15:0]  imme_i = inst_i[15:0];      // i型立即数
 
@@ -83,16 +83,16 @@ always @(*) begin
         aluop_o   = `EXE_NOP_OP;
         alusel_o  = `EXE_RES_NOP;
         we_o      = `Enable;            //写使能
-        waddr_o   =  rd_r;              //默认目的寄存器地址
+        waddr_o   =  rd;              //默认目的寄存器地址
         instvalid = `True;
         re1_o     = `Disable;           //Regfile的读使能1
         re2_o     = `Disable;           //Regfile的读使能2
-        raddr1_o  = rs_ir;              //默认读地址1
-        raddr2_o  = rt_ir;              //默认读地址2
+        raddr1_o  = rs;              //默认读地址1
+        raddr2_o  = rt;              //默认读地址2
         imme      = `ZeroWord;
         case (op)
             `EXE_SPECIAL: begin         //特殊指令码
-                case (sa_r)
+                case (sa)
                     5'b00000: begin
                         case (func)     //根据功能码识别操作
                             `EXE_AND: begin                 //and
@@ -163,6 +163,70 @@ always @(*) begin
                                 aluop_o   = `EXE_NOP_OP;
                                 alusel_o  = `EXE_RES_NOP;
                             end
+
+                            `EXE_MOVN: begin                //movn: rs1 -> rd（rs2不为0）
+                                instvalid = `True;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_MOVN_OP;
+                                alusel_o  = `EXE_RES_MOVE;
+                                if (data2_o == `ZeroWord) begin
+                                    we_o  = `Disable;
+                                end else begin
+                                    we_o  = `Enable;
+                                end
+                            end
+
+                            `EXE_MOVZ: begin                //movz: rs1 -> rd（rs2为0）
+                                instvalid = `True;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_MOVZ_OP;
+                                alusel_o  = `EXE_RES_MOVE;
+                                if (data2_o == `ZeroWord) begin
+                                    we_o  = `Enable;
+                                end else begin
+                                    we_o = `Disable;
+                                end
+                            end
+
+                            `EXE_MFHI: begin                //mfhi: hi -> rd
+                                instvalid = `True;
+                                re1_o     = `Disable;
+                                re2_o     = `Disable;
+                                aluop_o   = `EXE_MFHI_OP;
+                                alusel_o  = `EXE_RES_MOVE;
+                                we_o      = `Enable;
+                            end
+
+                            `EXE_MFLO: begin                //mflo: lo -> rd
+                                instvalid = `True;
+                                re1_o     = `Disable;
+                                re2_o     = `Disable;
+                                aluop_o   = `EXE_MFLO_OP;
+                                alusel_o  = `EXE_RES_MOVE;
+                                we_o      = `Enable;
+                            end
+
+                            `EXE_MTHI: begin                //mthi：rs1 -> hi
+                                instvalid = `True;
+                                re1_o     = `Enable;
+                                re2_o     = `Disable;
+                                aluop_o   = `EXE_MTHI_OP;
+                                //alusel_o  = `EXE_RES_MOVE;
+                                we_o      = `Disable;
+                            end
+
+                            `EXE_MTLO: begin                //mflo: rs1 -> lo
+                                instvalid = `True;
+                                re1_o     = `Enable;
+                                re2_o     = `Disable;
+                                aluop_o   = `EXE_MTLO_OP;
+                                //alusel_o  = `EXE_RES_MOVE;
+                                we_o      = `Disable;
+                            end
+
+
                             default: begin
                             end
                             endcase
@@ -179,10 +243,10 @@ always @(*) begin
                 alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
-                raddr1_o  = rs_ir;             //读端口1的源操作数地址
+                raddr1_o  = rs;             //读端口1的源操作数地址
                 imme      = {16'h0, imme_i};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
-                waddr_o   = rt_ir;             //结果写入的寄存器地址
+                waddr_o   = rt;             //结果写入的寄存器地址
             end
 
             `EXE_ANDI: begin                  //根据op的值判断是否是andi指令
@@ -191,10 +255,10 @@ always @(*) begin
                 alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
-                raddr1_o  = rs_ir;             //读端口1的源操作数地址
+                raddr1_o  = rs;             //读端口1的源操作数地址
                 imme      = {16'h0, imme_i};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
-                waddr_o   = rt_ir;             //结果写入的寄存器地址
+                waddr_o   = rt;             //结果写入的寄存器地址
             end
 
             `EXE_XORI: begin                  //根据op的值判断是否是xori指令
@@ -203,10 +267,10 @@ always @(*) begin
                 alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
-                raddr1_o  = rs_ir;             //读端口1的源操作数地址
+                raddr1_o  = rs;             //读端口1的源操作数地址
                 imme      = {16'h0, imme_i};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
-                waddr_o   = rt_ir;             //结果写入的寄存器地址
+                waddr_o   = rt;             //结果写入的寄存器地址
             end
 
             /* lui指令：将指令中的立即数左移16bit，
@@ -220,10 +284,10 @@ always @(*) begin
                 alusel_o  = `EXE_RES_LOGIC;  
                 re1_o     = `Enable;         
                 re2_o     = `Disable;        
-                raddr1_o  = rs_ir;             
+                raddr1_o  = rs;             
                 imme      = {imme_i, 16'h0};    //这里是左移
                 we_o      = `Enable;         
-                waddr_o   = rt_ir;             
+                waddr_o   = rt;             
             end
 
             /* pref指令用于缓存预取，
@@ -238,7 +302,7 @@ always @(*) begin
                 we_o      = `Disable;  
                 re1_o     = `Disable;         
                 re2_o     = `Disable;        
-                raddr1_o  = rs_ir;                        
+                raddr1_o  = rs;                        
             end
 
             default: begin
@@ -255,8 +319,8 @@ always @(*) begin
                     we_o        = `Enable;
                     re1_o       = `Disable;
                     re2_o       = `Enable;
-                    waddr_o     = rd_r; 
-                    imme[4:0]   = sa_r;
+                    waddr_o     = rd; 
+                    imme[4:0]   = sa;
                 end
 
                 `EXE_SRL: begin                     //srl
@@ -266,8 +330,8 @@ always @(*) begin
                     we_o        = `Enable;
                     re1_o       = `Disable;
                     re2_o       = `Enable;
-                    waddr_o     = rd_r; 
-                    imme[4:0]   = sa_r;
+                    waddr_o     = rd; 
+                    imme[4:0]   = sa;
                 end
 
                 `EXE_SRA: begin                     //sra
@@ -277,8 +341,8 @@ always @(*) begin
                     we_o        = `Enable;
                     re1_o       = `Disable;
                     re2_o       = `Enable;
-                    waddr_o     = rd_r; 
-                    imme[4:0]   = sa_r;
+                    waddr_o     = rd; 
+                    imme[4:0]   = sa;
                 end
 
             endcase
@@ -291,17 +355,17 @@ end
     第二段：确定进行运算的源操作数1 
     如果Regfile的读端口1有效，就把读出来的数作为操作数，
     否则把立即数作为操作数1。
-    在ori指令里re1_o是有效的，因此把从Regfile读出来的数作为源操作数1.
+
  */
 always @(*) begin
     if(rst) begin
         data1_o = `ZeroWord;
-    end else if( re1_o && ex_we_i 
-                && raddr1_o == ex_waddr_i       //这条指令要用到上一条指令的运算结果
+    end else if( (re1_o == `Enable) && (ex_we_i == `Enable) 
+                && (raddr1_o == ex_waddr_i)       //这条指令要用到上一条指令的运算结果
                 ) begin     
         data1_o = ex_wdata_i;
-    end else if( re1_o && mem_we_i
-                && raddr1_o == mem_waddr_i      //这条指令要用到上上条指令的运算结果
+    end else if( (re1_o == `Enable) && (mem_we_i == `Enable)
+                && (raddr1_o == mem_waddr_i)      //这条指令要用到上上条指令的运算结果
                 ) begin   
         data1_o = mem_wdata_i;
     end else if(re1_o) begin
@@ -317,17 +381,17 @@ end
     第三段：确定进行运算的源操作数2
     如果Regfile的读端口2有效，就把读出来的数作为操作数2，
     否则把立即数作为操作数2.
-    在ori指令里re2_o是无效的，因此把立即数作为操作数2.
+
  */
 always @(*) begin
     if(rst) begin
         data2_o = `ZeroWord;
-    end else if( re2_o && ex_we_i 
-                && raddr2_o == ex_waddr_i       //这条指令要用到上一条指令的运算结果
+    end else if( (re2_o == `Enable) && (ex_we_i == `Enable) 
+                && (raddr2_o == ex_waddr_i)       //这条指令要用到上一条指令的运算结果
                 ) begin     
         data2_o = ex_wdata_i;
-    end else if( re2_o && mem_we_i
-                && raddr2_o == mem_waddr_i      //这条指令要用到上上条指令的运算结果
+    end else if( (re2_o == `Enable) && (mem_we_i == `Enable)
+                && (raddr2_o == mem_waddr_i)      //这条指令要用到上上条指令的运算结果
                 ) begin   
         data2_o = mem_wdata_i;
     end else if(re2_o) begin
