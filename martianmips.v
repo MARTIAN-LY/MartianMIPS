@@ -55,14 +55,8 @@ wire[`RegDataBus]  ex_data1;
 wire[`RegDataBus]  ex_data2;
 wire[`RegAddrBus]  ex_waddr;
 wire               ex_we;
-wire[`RegDataBus]   ex_hi_i;
-wire[`RegDataBus]   ex_lo_i;
-wire                ex_mem_whilo;    //上条指令访存部分是否要读写 hilo 模块
-wire[`RegDataBus]   ex_mem_hi;
-wire[`RegDataBus]   ex_mem_lo;
-wire                ex_wb_whilo;     //上上条指令回写部分是否要读写 hilo 模块
-wire[`RegDataBus]   ex_wb_hi;
-wire[`RegDataBus]   ex_wb_lo;
+wire[`RegDataBus]  ex_hi_i;
+wire[`RegDataBus]  ex_lo_i;
 
 //ex_mem模块的输入
 wire[`RegDataBus]   exmem_result;
@@ -74,9 +68,9 @@ wire                exmem_ex_whilo;
 
 
 //mem模块输入
-wire[`RegDataBus]    mem_result;
-wire[`RegAddrBus]    mem_waddr;
-wire                 mem_we;
+wire[`RegDataBus]   mem_result;
+wire[`RegAddrBus]   mem_waddr;
+wire                mem_we;
 wire[`RegDataBus]   mem_hi_i;
 wire[`RegDataBus]   mem_lo_i;
 wire                mem_whilo_i;
@@ -221,12 +215,12 @@ ex ex0(
     //因为读写hilo模块而新增的端口
     .hi_i(ex_hi_i),
     .lo_i(ex_lo_i),
-    .mem_whilo_i(ex_mem_whilo),    //上条指令访存部分是否要读写 hilo 模块
-    .mem_hi_i(ex_mem_hi),
-    .mem_lo_i(ex_mem_lo),
-    .wb_whilo_i(ex_wb_whilo),     //上上条指令回写部分是否要读写 hilo 模块
-    .wb_hi_i(ex_wb_hi),
-    .wb_lo_i(ex_wb_lo),
+    .mem_whilo_i(memwb_mem_whilo),    //上条指令访存部分是否要读写 hilo 模块
+    .mem_hi_i(memwb_mem_hi),
+    .mem_lo_i(memwb_mem_lo),
+    .wb_whilo_i(hilo_we),     //上上条指令回写部分是否要读写 hilo 模块
+    .wb_hi_i(hilo_hi_i),
+    .wb_lo_i(hilo_lo_i),
     .whilo_o(exmem_ex_whilo),        //这条指令要不要读写 hilo 模块
     .hi_o(exmem_ex_hi),
     .lo_o(exmem_ex_lo)

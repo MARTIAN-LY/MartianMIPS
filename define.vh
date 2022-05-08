@@ -7,15 +7,23 @@
 
 
 //************  译码阶段的宏定义  ************
-`define AluOpBus    7:0                 //译码阶段的输出aluop_o的宽度
-`define AluSelBus   2:0                 //译码阶段的输出alusel_o的宽度
+`define AluOpBus    7:0                 //具体指定
+`define AluSelBus   2:0                 //大类区分
 
 
 //************  与具体指令有关的宏定义  ************
 
 
-//r型special
-`define EXE_SPECIAL 6'b000000           //special类型指令
+// special类型的 opcode
+`define EXE_SPECIAL 6'b000000
+
+/**
+    special 是逻辑运算类，
+    根据移位位数是不是 0 （sa == 0）来判断是不是移位指令，
+    不是移位指令，再由 func 判断菌体运算类型
+ */
+
+// special类型的 func
 `define EXE_AND     6'b100100           //and
 `define EXE_OR      6'b100101           //or
 `define EXE_XOR     6'b100110           //xor
@@ -36,7 +44,7 @@
 `define EXE_MTLO    6'b010011
 
 
-//i型
+//带立即数的逻辑运算，i型，可以直接由 opcode 判断
 `define EXE_ANDI    6'b001100
 `define EXE_ORI     6'b001101           
 `define EXE_XORI    6'b001110

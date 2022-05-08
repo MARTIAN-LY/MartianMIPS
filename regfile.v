@@ -2,10 +2,12 @@
 
 /* 
     Regfile模块，定义32个32位的通用寄存器
-    有2个读端口、一个写端口.
+    有2个读端口、1个写端口.
 
     写是执行阶段完成后、访存、回写，来自mem_wb模块
     读取数据是传给译码阶段的，读数据来源id模块、去处也是id模块
+
+    ！！！！！！！写操作是时序逻辑，读操作不需要 clk 控制！！！！！！！
  */
 
 module regfile (
@@ -36,7 +38,7 @@ reg [`RegDataBus] regs[0 : `RegNum-1];
             写操作
  规定地址为0的寄存器内容是0，不能写入
  **************************/
- always @(posedge clk ) begin
+ always @(posedge clk) begin
      if(~rst) begin
          if ( we && waddr != `RegAddr_0) begin
              regs[waddr] <= wdata;
@@ -52,11 +54,11 @@ reg [`RegDataBus] regs[0 : `RegNum-1];
     这样解决了隔两条指令的数据冲突
  ***************************/
 
- always @(posedge clk ) begin
+ always @(*) begin
      if(rst) begin
          rdata_1 <= `ZeroWord;
      end else if(raddr_1 == `RegAddr_0) begin
-         rdata_1 <= 0;
+         rdata_1 <= `ZeroWord;
      end else if(raddr_1 == waddr && we && re1) begin
          rdata_1 <= wdata;                  //同时对一个寄存器读、写,直接把写的数据读出
      end else if(re1) begin
@@ -70,11 +72,11 @@ reg [`RegDataBus] regs[0 : `RegNum-1];
             读操作2
  ***************************/
 
- always @(posedge clk ) begin
+ always @(*) begin
      if(rst) begin
          rdata_2 <= `ZeroWord;
      end else if(raddr_2 == `RegAddr_0) begin
-         rdata_2 <= 0;
+         rdata_2 <= `ZeroWord;
      end else if(raddr_2 == waddr && we && re2) begin
          rdata_2 <= wdata;                  //同时对一个寄存器读、写
      end else if(re2) begin
@@ -83,7 +85,6 @@ reg [`RegDataBus] regs[0 : `RegNum-1];
          rdata_2 <= `ZeroWord;
      end
  end
-
 
 
 endmodule //regfile

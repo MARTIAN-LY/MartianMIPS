@@ -2,7 +2,6 @@
 
 /* 
     id模块，对指令进行译码
-    TMD直接组合逻辑，连clk都不要了。
 
     id模块与Regfile之间的连接：
         id模块只从Regfile模块读取数据，
@@ -10,16 +9,20 @@
  */
 module id (
     input   wire                rst,
-    input   wire[`InstAddrBus]  pc_i,       //指令地址,暂时没用上啊
+    input   wire[`InstAddrBus]  pc_i,       //pc的值，也就是指令地址,在跳转的时候才用得上
     input   wire[`InstBus]      inst_i,     //指令内容
 
-    //读取Regfile
-    output  reg                 re1_o,
-    output  reg                 re2_o,
+    //读取 Regfile 的信号
+    output  reg                 re1_o,      //读使能 1
+    output  reg                 re2_o,      //读使能 2
     output  reg[`RegAddrBus]    raddr1_o,
     output  reg[`RegAddrBus]    raddr2_o,
     input   wire[`RegDataBus]   rdata1_i,
     input   wire[`RegDataBus]   rdata2_i,     
+
+    //写入 Regfile 的信号
+    output  reg                 we_o,
+    output  reg[`RegAddrBus]    waddr_o,
 
 
     //解决下一条指令的数据冲突，把执行阶段的结果直接交给译码阶段
@@ -32,11 +35,6 @@ module id (
     input   wire[`RegAddrBus]   mem_waddr_i,
     input   wire[`RegDataBus]   mem_wdata_i,
 
-    
-    //写入Regfile
-    //现在结果还没出来，所以写结果不是id模块的事，把信号传给后面
-    output  reg                 we_o,
-    output  reg[`RegAddrBus]    waddr_o,
 
     //送到执行阶段的信息
     output  reg[`AluOpBus]      aluop_o,
@@ -48,13 +46,12 @@ module id (
 
 
 //对指令的操作码、地址码进行分解
-wire[5:0]   op     = inst_i[31:26];     // 指令码
-wire[4:0]   rs     = inst_i[25:21];     // r型、i型操作数一
-wire[4:0]   rt     = inst_i[20:16];     // r型操作数2，i型结果
-wire[4:0]   rd     = inst_i[15:11];     // r型结果
-wire[4:0]   sa     = inst_i[10:6];      // r型移位数
-wire[5:0]   func   = inst_i[5:0];       // 功能码
-wire[15:0]  imme_i = inst_i[15:0];      // i型立即数
+wire[5:0]   op     = inst_i[31:26];     // opcode
+wire[4:0]   rs    = inst_i[25:21];      // rs
+wire[4:0]   rt    = inst_i[20:16];      // rt
+wire[4:0]   rd     = inst_i[15:11];     // rd
+wire[4:0]   sa     = inst_i[10:6];      // 移位数
+wire[5:0]   func   = inst_i[5:0];       // func
 
 
 //保存扩展后的立即数
@@ -62,7 +59,6 @@ reg[`RegDataBus]    imme;
 
 //指示指令是否有效
 reg instvalid;
-
 
 /* 
     第一段：对指令进行译码
@@ -83,16 +79,16 @@ always @(*) begin
         aluop_o   = `EXE_NOP_OP;
         alusel_o  = `EXE_RES_NOP;
         we_o      = `Enable;            //写使能
-        waddr_o   =  rd;              //默认目的寄存器地址
+        waddr_o   =  rd;                //默认目的寄存器地址
         instvalid = `True;
         re1_o     = `Disable;           //Regfile的读使能1
         re2_o     = `Disable;           //Regfile的读使能2
-        raddr1_o  = rs;              //默认读地址1
-        raddr2_o  = rt;              //默认读地址2
+        raddr1_o  = rs;                 //默认读地址1
+        raddr2_o  = rt;                 //默认读地址2
         imme      = `ZeroWord;
         case (op)
             `EXE_SPECIAL: begin         //特殊指令码
-                case (sa)
+                case (sa)               //移位数
                     5'b00000: begin
                         case (func)     //根据功能码识别操作
                             `EXE_AND: begin                 //and
@@ -164,7 +160,7 @@ always @(*) begin
                                 alusel_o  = `EXE_RES_NOP;
                             end
 
-                            `EXE_MOVN: begin                //movn: rs1 -> rd（rs2不为0）
+                            `EXE_MOVN: begin                //movn: rs1 -> rd（rt不为0）
                                 instvalid = `True;
                                 re1_o     = `Enable;
                                 re2_o     = `Enable;
@@ -177,7 +173,7 @@ always @(*) begin
                                 end
                             end
 
-                            `EXE_MOVZ: begin                //movz: rs1 -> rd（rs2为0）
+                            `EXE_MOVZ: begin                //movz: rs1 -> rd（rt为0）
                                 instvalid = `True;
                                 re1_o     = `Enable;
                                 re2_o     = `Enable;
@@ -244,7 +240,7 @@ always @(*) begin
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
                 raddr1_o  = rs;             //读端口1的源操作数地址
-                imme      = {16'h0, imme_i};    //对立即数进行扩展
+                imme      = {16'h0, inst_i[15:0]};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
                 waddr_o   = rt;             //结果写入的寄存器地址
             end
@@ -256,7 +252,7 @@ always @(*) begin
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
                 raddr1_o  = rs;             //读端口1的源操作数地址
-                imme      = {16'h0, imme_i};    //对立即数进行扩展
+                imme      = {16'h0, inst_i[15:0]};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
                 waddr_o   = rt;             //结果写入的寄存器地址
             end
@@ -268,15 +264,13 @@ always @(*) begin
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
                 raddr1_o  = rs;             //读端口1的源操作数地址
-                imme      = {16'h0, imme_i};    //对立即数进行扩展
+                imme      = {16'h0, inst_i[15:0]};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
                 waddr_o   = rt;             //结果写入的寄存器地址
             end
 
-            /* lui指令：将指令中的立即数左移16bit，
-                然后与 $0 寄存器 或 运算，
-                结果放入rt寄存器，
-                等价于把立即数左移 16 位放入 rt 寄存器
+            /* lui指令：
+                把立即数放入 rt 寄存器的高 16 位
              */
             `EXE_LUI: begin                  //根据op的值判断是否是lui指令
                 instvalid = `True;           //lui是有效指令
@@ -285,7 +279,7 @@ always @(*) begin
                 re1_o     = `Enable;         
                 re2_o     = `Disable;        
                 raddr1_o  = rs;             
-                imme      = {imme_i, 16'h0};    //这里是左移
+                imme      = {inst_i[15:0], 16'h0};    //这里是左移
                 we_o      = `Enable;         
                 waddr_o   = rt;             
             end
@@ -309,7 +303,7 @@ always @(*) begin
             end    
         endcase
 
-        //移位指令都是对第二个操作数移位的
+        //带立即数的移位指令，不需要读rs
         if (inst_i[31:21] == 11'b00000000000) begin
             case(func)
                 `EXE_SLL: begin                     //sll
@@ -319,7 +313,6 @@ always @(*) begin
                     we_o        = `Enable;
                     re1_o       = `Disable;
                     re2_o       = `Enable;
-                    waddr_o     = rd; 
                     imme[4:0]   = sa;
                 end
 
@@ -330,7 +323,6 @@ always @(*) begin
                     we_o        = `Enable;
                     re1_o       = `Disable;
                     re2_o       = `Enable;
-                    waddr_o     = rd; 
                     imme[4:0]   = sa;
                 end
 
@@ -341,8 +333,10 @@ always @(*) begin
                     we_o        = `Enable;
                     re1_o       = `Disable;
                     re2_o       = `Enable;
-                    waddr_o     = rd; 
                     imme[4:0]   = sa;
+                end
+
+                default begin
                 end
 
             endcase
@@ -360,11 +354,11 @@ end
 always @(*) begin
     if(rst) begin
         data1_o = `ZeroWord;
-    end else if( (re1_o == `Enable) && (ex_we_i == `Enable) 
+    end else if( re1_o && ex_we_i 
                 && (raddr1_o == ex_waddr_i)       //这条指令要用到上一条指令的运算结果
                 ) begin     
         data1_o = ex_wdata_i;
-    end else if( (re1_o == `Enable) && (mem_we_i == `Enable)
+    end else if( re1_o && mem_we_i
                 && (raddr1_o == mem_waddr_i)      //这条指令要用到上上条指令的运算结果
                 ) begin   
         data1_o = mem_wdata_i;
@@ -386,11 +380,11 @@ end
 always @(*) begin
     if(rst) begin
         data2_o = `ZeroWord;
-    end else if( (re2_o == `Enable) && (ex_we_i == `Enable) 
+    end else if( re2_o && ex_we_i 
                 && (raddr2_o == ex_waddr_i)       //这条指令要用到上一条指令的运算结果
                 ) begin     
         data2_o = ex_wdata_i;
-    end else if( (re2_o == `Enable) && (mem_we_i == `Enable)
+    end else if( re2_o && mem_we_i
                 && (raddr2_o == mem_waddr_i)      //这条指令要用到上上条指令的运算结果
                 ) begin   
         data2_o = mem_wdata_i;

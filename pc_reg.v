@@ -9,7 +9,7 @@ module pc_reg (
     input   wire    clk,
     input   wire    rst,
     output  reg     ce,                 //ָ指令存储器的使能信号
-    output  reg[`InstAddrBus]    pc     //ָ指令的地址
+    output  reg[`InstAddrBus]    pc     //ָ指令在存储器中的的地址
 );
 
 always @(posedge clk) begin
@@ -23,7 +23,7 @@ end
 
 always @(posedge clk ) begin
     //这里改成~rst会少读取一条
-    if(~ce) begin
+    if(~ce) begin                       //指令存储器禁用的时候，pc = 0
         pc <= `ZeroWord;
     end else begin
         pc <= pc + 4;                   //按字节寻址，一条指令32位，下一条指令地址 = 现地址 + 4

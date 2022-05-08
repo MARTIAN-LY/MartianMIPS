@@ -13,7 +13,7 @@
 
    //从译码阶段传过来的信息
    input  wire[`AluOpBus]      id_aluop,   //操作子类型
-   input  wire[`AluSelBus]     id_alusel,  //操作类型
+   input  wire[`AluSelBus]     id_alusel,  //操作大类型
    input  wire[`RegDataBus]    id_data1,   //操作数1
    input  wire[`RegDataBus]    id_data2,   //操作数2
    input  wire[`RegAddrBus]    id_waddr,   //写入地址

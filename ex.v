@@ -2,8 +2,7 @@
 
 
 /* 
-    执行模块，也是一个时序逻辑电路
-    根据得到的操作类型、源操作数、写入地址等进行运算
+    执行模块
  */
 module ex (
     input   wire    rst,
@@ -103,7 +102,7 @@ always @(*) begin
                 hi_o    = data1_i;
                 lo_o    = `ZeroWord;
             end       
-            `EXE_MTHI_OP:begin
+            `EXE_MTLO_OP:begin
                 whilo_o = `Enable;
                 hi_o    = `ZeroWord;
                 lo_o    = data1_i;

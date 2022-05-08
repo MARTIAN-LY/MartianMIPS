@@ -2,16 +2,15 @@
 
 /*  
     if_id模块是 取指 和 译码 的中间模块。
-    作用好像有暂存从PC取出的地址，
-             暂存取到的指令，
-    这么说像是MAR和MDR？？？
+    作用有暂存 pc 的值，
+        暂存取到的指令，
  */
 
 module if_id (
     input   wire    clk,
     input   wire    rst,
-    input   wire[`InstAddrBus]  if_pc,       //从pc中取出来的指令地址，32位
-    input   wire[`InstBus]      if_inst,     //这TM直接就是取到的指令
+    input   wire[`InstAddrBus]  if_pc,       // pc 的值
+    input   wire[`InstBus]      if_inst,     //取到的指令
     output  reg[`InstAddrBus]   id_pc,       
     output  reg[`InstBus]       id_inst      //把指令传给译码阶段
 );
