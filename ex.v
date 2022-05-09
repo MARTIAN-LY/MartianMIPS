@@ -68,11 +68,11 @@ end
      end else begin
          move_out = `ZeroWord;
          case(aluop_i)
-            `EXE_MOVN_OP:begin      //movn：rs1 -> rd
+            `EXE_MOVN_OP:begin      //movn：rs -> rd
                 move_out = data1_i;
             end
-            `EXE_MOVZ_OP:begin      //movz：rs1 -> rd
-                move_out = data2_i;
+            `EXE_MOVZ_OP:begin      //movz：rs -> rd
+                move_out = data1_i;
             end
             `EXE_MFHI_OP:begin      //mfhi：hi -> rd
                 move_out = HI;
@@ -87,34 +87,6 @@ end
      end
  end
 
- /* 
-    对 MTHI、MTLO,要读写hilo部分
- */
-always @(*) begin
-    if(rst) begin
-        whilo_o = `Disable;
-        hi_o    = `ZeroWord;
-        lo_o    = `ZeroWord;
-    end else begin
-        case(aluop_i)
-            `EXE_MTHI_OP:begin      //rs1 -> hi
-                whilo_o = `Enable;
-                hi_o    = data1_i;
-                lo_o    = `ZeroWord;
-            end       
-            `EXE_MTLO_OP:begin
-                whilo_o = `Enable;
-                hi_o    = `ZeroWord;
-                lo_o    = data1_i;
-            end
-            default begin
-                whilo_o = `Disable;
-                hi_o    = `ZeroWord;
-                lo_o    = `ZeroWord;
-            end
-        endcase
-    end
-end
 
 
 /* 
@@ -194,6 +166,39 @@ always @(*) begin
     
 end
 
+
+ /* 
+    MTHI、MTLO两条指令,要
+    要对hilo部分进行读写。
+
+    可以把 regfile 系
+        和 hilo 系的指令看成两条并行的流水线
+ */
+always @(*) begin
+    if(rst) begin
+        whilo_o = `Disable;
+        hi_o    = `ZeroWord;
+        lo_o    = `ZeroWord;
+    end else begin
+        case(aluop_i)
+            `EXE_MTHI_OP:begin      //rs -> hi，lo保持不变
+                whilo_o = `Enable;
+                hi_o    = data1_i;
+                lo_o    = LO;
+            end       
+            `EXE_MTLO_OP:begin      //rs -> lo，hi保持不变
+                whilo_o = `Enable;
+                hi_o    = HI;
+                lo_o    = data1_i;
+            end
+            default begin
+                whilo_o = `Disable;
+                hi_o    = `ZeroWord;
+                lo_o    = `ZeroWord;
+            end
+        endcase
+    end
+end
 
 
 endmodule //ex

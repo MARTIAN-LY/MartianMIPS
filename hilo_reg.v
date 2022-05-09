@@ -20,10 +20,10 @@ always @(posedge clk ) begin
         lo_o <= `ZeroWord;
     end else if(we) begin
         hi_o <= hi_i;
-        hi_o <= hi_o;
+        lo_o <= lo_i;
     end else begin
-        hi_o <= `ZeroWord;
-        lo_o <= `ZeroWord;
+        hi_o <= hi_o;
+        lo_o <= lo_o;
     end
 end
 

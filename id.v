@@ -160,20 +160,20 @@ always @(*) begin
                                 alusel_o  = `EXE_RES_NOP;
                             end
 
-                            `EXE_MOVN: begin                //movn: rs1 -> rd（rt不为0）
+                            `EXE_MOVN: begin                //movn: rs -> rd（rt不为0）
                                 instvalid = `True;
                                 re1_o     = `Enable;
-                                re2_o     = `Enable;
+                                re2_o     = `Enable;                //读使能，地址 rt
                                 aluop_o   = `EXE_MOVN_OP;
                                 alusel_o  = `EXE_RES_MOVE;
-                                if (data2_o == `ZeroWord) begin
+                                if (data2_o == `ZeroWord) begin     //data_2 就是 rt 的值
                                     we_o  = `Disable;
                                 end else begin
                                     we_o  = `Enable;
                                 end
                             end
 
-                            `EXE_MOVZ: begin                //movz: rs1 -> rd（rt为0）
+                            `EXE_MOVZ: begin                //movz: rs -> rd（rt为0）
                                 instvalid = `True;
                                 re1_o     = `Enable;
                                 re2_o     = `Enable;
@@ -204,7 +204,7 @@ always @(*) begin
                                 we_o      = `Enable;
                             end
 
-                            `EXE_MTHI: begin                //mthi：rs1 -> hi
+                            `EXE_MTHI: begin                //mthi：rs -> hi
                                 instvalid = `True;
                                 re1_o     = `Enable;
                                 re2_o     = `Disable;
@@ -213,7 +213,7 @@ always @(*) begin
                                 we_o      = `Disable;
                             end
 
-                            `EXE_MTLO: begin                //mflo: rs1 -> lo
+                            `EXE_MTLO: begin                //mflo: rs -> lo
                                 instvalid = `True;
                                 re1_o     = `Enable;
                                 re2_o     = `Disable;

@@ -37,7 +37,7 @@ always @(*) begin
         waddr_o  = waddr_i;
         we_o     = we_i;
         hi_o     = hi_i;
-        lo_o     = lo_o;
+        lo_o     = lo_i;
         whilo_o  = whilo_i;
     end
 end

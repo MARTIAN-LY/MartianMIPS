@@ -194,7 +194,6 @@ id_ex id_ex0(
     .ex_we(ex_we)       //写入使能
 );
 
-
 //ex模块例化
 ex ex0(
     .rst(rst),
@@ -215,10 +214,10 @@ ex ex0(
     //因为读写hilo模块而新增的端口
     .hi_i(ex_hi_i),
     .lo_i(ex_lo_i),
-    .mem_whilo_i(memwb_mem_whilo),    //上条指令访存部分是否要读写 hilo 模块
+    .mem_whilo_i(memwb_mem_whilo),  //上条指令访存部分是否要读写 hilo 模块
     .mem_hi_i(memwb_mem_hi),
     .mem_lo_i(memwb_mem_lo),
-    .wb_whilo_i(hilo_we),     //上上条指令回写部分是否要读写 hilo 模块
+    .wb_whilo_i(hilo_we),           //上上条指令回写部分是否要读写 hilo 模块
     .wb_hi_i(hilo_hi_i),
     .wb_lo_i(hilo_lo_i),
     .whilo_o(exmem_ex_whilo),        //这条指令要不要读写 hilo 模块
