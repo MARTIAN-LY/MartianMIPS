@@ -78,7 +78,7 @@ always @(*) begin
     end else begin
         aluop_o   = `EXE_NOP_OP;
         alusel_o  = `EXE_RES_NOP;
-        we_o      = `Enable;            //写使能
+        we_o      = `Enable;            //默认写使能
         waddr_o   =  rd;                //默认目的寄存器地址
         instvalid = `True;
         re1_o     = `Disable;           //Regfile的读使能1
@@ -188,40 +188,111 @@ always @(*) begin
 
                             `EXE_MFHI: begin                //mfhi: hi -> rd
                                 instvalid = `True;
+                                we_o      = `Enable;
                                 re1_o     = `Disable;
                                 re2_o     = `Disable;
                                 aluop_o   = `EXE_MFHI_OP;
                                 alusel_o  = `EXE_RES_MOVE;
-                                we_o      = `Enable;
                             end
 
                             `EXE_MFLO: begin                //mflo: lo -> rd
                                 instvalid = `True;
+                                we_o      = `Enable;
                                 re1_o     = `Disable;
                                 re2_o     = `Disable;
                                 aluop_o   = `EXE_MFLO_OP;
                                 alusel_o  = `EXE_RES_MOVE;
-                                we_o      = `Enable;
                             end
 
                             `EXE_MTHI: begin                //mthi：rs -> hi
                                 instvalid = `True;
+                                we_o      = `Disable;
                                 re1_o     = `Enable;
                                 re2_o     = `Disable;
                                 aluop_o   = `EXE_MTHI_OP;
-                                //alusel_o  = `EXE_RES_MOVE;
-                                we_o      = `Disable;
+                                //alusel_o  = `EXE_RES_MOVE; 特殊，不属于移动指令
                             end
 
                             `EXE_MTLO: begin                //mflo: rs -> lo
                                 instvalid = `True;
+                                we_o      = `Disable;
                                 re1_o     = `Enable;
                                 re2_o     = `Disable;
                                 aluop_o   = `EXE_MTLO_OP;
-                                //alusel_o  = `EXE_RES_MOVE;
-                                we_o      = `Disable;
+                                //alusel_o  = `EXE_RES_MOVE;  特殊，不属于移动指令
                             end
 
+                            `EXE_ADD: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_ADD_OP;
+                                alusel_o  = `EXE_RES_ARITHMETIC;
+                            end
+
+                            `EXE_ADDU: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_ADDU_OP;
+                                alusel_o  = `EXE_RES_ARITHMETIC;
+                            end
+
+                            `EXE_SUB: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SUB_OP;
+                                alusel_o  = `EXE_RES_ARITHMETIC;
+                            end
+
+                            `EXE_SUBU: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SUBU_OP;
+                                alusel_o  = `EXE_RES_ARITHMETIC;
+                            end
+
+                            `EXE_SLT: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SLT_OP;
+                                alusel_o  = `EXE_RES_ARITHMETIC;
+                            end
+
+                            `EXE_SLTU: begin
+                                instvalid = `True;
+                                we_o      = `Enable;
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_SLTU_OP;
+                                alusel_o  = `EXE_RES_ARITHMETIC;
+                            end
+
+                            `EXE_MULT: begin                
+                                instvalid = `True;
+                                we_o      = `Disable;       //写入 hilo，不写 rd
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_MULT_OP;
+                                // alusel_o  = `EXE_RES_MUL;   //乘法不属于简单算术类型
+                            end
+
+                            `EXE_MULTU: begin                
+                                instvalid = `True;
+                                we_o      = `Disable;       //写入 hilo，不写 rd
+                                re1_o     = `Enable;
+                                re2_o     = `Enable;
+                                aluop_o   = `EXE_MULTU_OP;
+                                // alusel_o  = `EXE_RES_MUL;   //乘法不属于简单算术类型
+                            end
 
                             default: begin
                             end
@@ -232,6 +303,35 @@ always @(*) begin
                     end
                 endcase
             end
+
+            `EXE_SPECIAL_2: begin
+                case (func)
+                    `EXE_CLZ: begin     //rs左边 0 的个数，赋值给 rd
+                        instvalid = `True;
+                        we_o      = `Enable;
+                        re1_o     = `Enable;
+                        re2_o     = `Disable;
+                        aluop_o   = `EXE_CLZ_OP;
+                        alusel_o  = `EXE_RES_ARITHMETIC;
+                    end
+                    `EXE_CLO: begin     //rs左边 1 的个数，赋值给 rd
+                        instvalid = `True;
+                        we_o      = `Enable;
+                        re1_o     = `Enable;
+                        re2_o     = `Disable;
+                        aluop_o   = `EXE_CLO_OP;
+                        alusel_o  = `EXE_RES_ARITHMETIC;
+                    end
+                    `EXE_MUL: begin
+                        instvalid = `True;
+                        we_o      = `Enable;
+                        re1_o     = `Enable;
+                        re2_o     = `Enable;
+                        aluop_o   = `EXE_MUL_OP;
+                        alusel_o  = `EXE_RES_MUL;
+                    end
+                endcase
+            end
                     
             `EXE_ORI: begin                  //根据op的值判断是否是ori指令
                 instvalid = `True;           //ori是有效指令
@@ -239,7 +339,6 @@ always @(*) begin
                 alusel_o  = `EXE_RES_LOGIC;  //告诉ALU运算类型是逻辑运算
                 re1_o     = `Enable;         //从读端口1读出源操作数
                 re2_o     = `Disable;        //读端口2用不到
-                raddr1_o  = rs;             //读端口1的源操作数地址
                 imme      = {16'h0, inst_i[15:0]};    //对立即数进行扩展
                 we_o      = `Enable;         //将结果写入目的寄存器，写使能
                 waddr_o   = rt;             //结果写入的寄存器地址
@@ -282,6 +381,50 @@ always @(*) begin
                 imme      = {inst_i[15:0], 16'h0};    //这里是左移
                 we_o      = `Enable;         
                 waddr_o   = rt;             
+            end
+
+            `EXE_ADDI: begin
+                instvalid   = `True;
+                we_o        = `Enable;
+                re1_o       = `Enable;
+                re2_o       = `Disable;
+                aluop_o     = `EXE_ADD_OP;
+                alusel_o    = `EXE_RES_ARITHMETIC;
+                imme        = { { 16{inst_i[15]} }, inst_i[15:0] };
+                waddr_o     = rt;
+            end
+
+            `EXE_ADDIU: begin
+                instvalid   = `True;
+                we_o        = `Enable;
+                re1_o       = `Enable;
+                re2_o       = `Disable;
+                aluop_o     = `EXE_ADDU_OP;
+                alusel_o    = `EXE_RES_ARITHMETIC;
+                imme        = { { 16{inst_i[15]} }, inst_i[15:0] };
+                waddr_o     = rt;
+            end
+
+            `EXE_SLTI: begin
+                instvalid   = `True;
+                we_o        = `Enable;
+                re1_o       = `Enable;
+                re2_o       = `Disable;
+                aluop_o     = `EXE_SLT_OP;
+                alusel_o    = `EXE_RES_ARITHMETIC;
+                imme        = { { 16{inst_i[15]} }, inst_i[15:0] };
+                waddr_o     = rt;
+            end
+
+            `EXE_SLTIU: begin
+                instvalid   = `True;
+                we_o        = `Enable;
+                re1_o       = `Enable;
+                re2_o       = `Disable;
+                aluop_o     = `EXE_SLTU_OP;
+                alusel_o    = `EXE_RES_ARITHMETIC;
+                imme        = { { 16{inst_i[15]} }, inst_i[15:0] };
+                waddr_o     = rt;
             end
 
             /* pref指令用于缓存预取，
