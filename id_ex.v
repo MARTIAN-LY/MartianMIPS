@@ -18,6 +18,7 @@
    input  wire[`RegDataBus]    id_data2,   //操作数2
    input  wire[`RegAddrBus]    id_waddr,   //写入地址
    input  wire                 id_we,      //写入使能
+   input  wire[5:0]            stall,      //暂停
 
    //传给执行阶段的信息
    output  reg[`AluOpBus]      ex_aluop,   //操作子类型
@@ -30,21 +31,45 @@
 
 
  always @(posedge clk ) begin
-     if(rst) begin
+      if(rst) begin
         ex_aluop  <= `EXE_NOP_OP;
         ex_alusel <= `EXE_RES_NOP;
         ex_data1  <= `ZeroWord;
         ex_data2  <= `ZeroWord;
         ex_waddr  <= `RegAddr_0;
         ex_we     <= `Disable;
-     end else begin
+      end 
+      /* 
+         译码阶段暂停，执行阶段继续
+      */
+      else if(stall[2] && !stall[3])begin
+        ex_aluop  <= `EXE_NOP_OP;
+        ex_alusel <= `EXE_RES_NOP;
+        ex_data1  <= `ZeroWord;
+        ex_data2  <= `ZeroWord;
+        ex_waddr  <= `RegAddr_0;
+        ex_we     <= `Disable;
+      end
+      /* 
+         译码阶段不暂停
+       */
+      else if(!stall[2]) begin
         ex_aluop  <= id_aluop;
         ex_alusel <= id_alusel;
         ex_data1  <= id_data1;
         ex_data2  <= id_data2;
         ex_waddr  <= id_waddr;
         ex_we     <= id_we;
-     end
+      end 
+      
+      else begin
+        ex_aluop  <= ex_aluop;
+        ex_alusel <= ex_alusel;
+        ex_data1  <= ex_data1;
+        ex_data2  <= ex_data2;
+        ex_waddr  <= ex_waddr;
+        ex_we     <= ex_we;
+      end
  end
  
  endmodule //id_ex

@@ -31,7 +31,9 @@ module ex (
     //执行的结果
     output  reg                 we_o,
     output  reg[`RegAddrBus]    waddr_o,
-    output  reg[`RegDataBus]    result_o 
+    output  reg[`RegDataBus]    result_o,
+
+    output  reg                 stallreq        //是否请求暂停流水线
 );
 
 //暂存运算结果

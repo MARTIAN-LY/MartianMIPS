@@ -89,12 +89,27 @@ wire hilo_we;
 wire[`RegDataBus]   hilo_hi_i;
 wire[`RegDataBus]   hilo_lo_i;
 
+//ctrl模块的输入输出
+wire ctrl_stall_from_id;
+wire ctrl_stall_from_ex;
+wire[5:0] ctrl_stall;
+
+
+//ctrl模块例化
+ctrl ctrl0(
+    .rst(rst),
+    .stall_from_id(ctrl_stall_from_id),
+    .stall_from_ex(ctrl_stall_from_ex),
+    .stall(ctrl_stall)
+);
+
 //pc_reg模块例化
 pc_reg  pc_reg0(
     .clk(clk),
     .rst(rst),
-    .ce(rom_ce_o),                 //ָ指令存储器的使能信号
-    .pc(ifid_pc)     //ָ指令的地址
+    .ce(rom_ce_o),      //ָ指令存储器的使能信号
+    .pc(ifid_pc),       //ָ指令的地址
+    .stall(ctrl_stall)
 );
 
 //pc直接把地址传给指令存储器
@@ -106,9 +121,10 @@ if_id if_id0(
     .clk(clk),
     .rst(rst),
     .if_pc(ifid_pc),        //从pc中取出来的指令地址，32位
-    .if_inst(rom_data_i),   //这TM直接就是取到的指令
+    .if_inst(rom_data_i),   //就是取到的指令
     .id_pc(id_pc),       
-    .id_inst(id_inst)      //这TM直接把指令送给译码阶段
+    .id_inst(id_inst),      //把指令送给译码阶段
+    .stall(ctrl_stall)
 );
 
 //id模块的例化
@@ -144,8 +160,13 @@ id id0(
     //用到上一条指令访存阶段的结果
     .mem_we_i(memwb_we),
     .mem_waddr_i(memwb_waddr),
-    .mem_wdata_i(memwb_result)
+    .mem_wdata_i(memwb_result),
+
+    .stallreq(ctrl_stall_from_id)
 );
+
+
+
 
 //Regfile模块例化
 //写是执行阶段完成后、访存、回写，来自mem_wb模块
@@ -191,7 +212,8 @@ id_ex id_ex0(
     .ex_data1(ex_data1),   //操作数1
     .ex_data2(ex_data2),   //操作数2
     .ex_waddr(ex_waddr),   //写入地址
-    .ex_we(ex_we)       //写入使能
+    .ex_we(ex_we),       //写入使能
+    .stall(ctrl_stall)
 );
 
 //ex模块例化
@@ -222,7 +244,9 @@ ex ex0(
     .wb_lo_i(hilo_lo_i),
     .whilo_o(exmem_ex_whilo),        //这条指令要不要读写 hilo 模块
     .hi_o(exmem_ex_hi),
-    .lo_o(exmem_ex_lo)
+    .lo_o(exmem_ex_lo),
+
+    .stallreq(ctrl_stall_from_ex)
 );
 
 
@@ -245,7 +269,9 @@ ex_mem ex_mem0(
     .mem_waddr(mem_waddr),
     .mem_hi(mem_hi_i),
     .mem_lo(mem_lo_i),
-    .mem_whilo(mem_whilo_i)
+    .mem_whilo(mem_whilo_i),
+
+    .stall(ctrl_stall)
 );
 
 
@@ -290,7 +316,9 @@ mem_wb mem_wb0(
     .wb_result(regfile_wdata),
     .wb_hi(hilo_hi_i),
     .wb_lo(hilo_lo_i),
-    .wb_whilo(hilo_we)
+    .wb_whilo(hilo_we),
+    
+    .stall(ctrl_stall)
 );
 
 

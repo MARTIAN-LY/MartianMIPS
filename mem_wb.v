@@ -10,6 +10,8 @@ module mem_wb (
     input   wire    clk,
     input   wire    rst,
 
+    input   wire[5:0]   stall,
+
     //来自mem模块的数据
     input   wire                mem_we,
     input   wire[`RegAddrBus]   mem_waddr,
@@ -35,13 +37,35 @@ always @(posedge clk ) begin
         wb_hi      <= `ZeroWord;
         wb_lo      <= `ZeroWord;
         wb_whilo   <= `Disable;
-    end else begin
+    end 
+    /* 
+        访存阶段暂停，回写阶段继续
+     */
+    else if(stall[4] && !stall[5])begin
+        wb_we      <= `Disable;
+        wb_waddr   <= `RegAddr_0;
+        wb_result  <= `ZeroWord;
+        wb_hi      <= `ZeroWord;
+        wb_lo      <= `ZeroWord;
+        wb_whilo   <= `Disable;
+    end
+    /* 
+        访存阶段不暂停
+     */
+    else if(!stall[4]) begin
         wb_we      <= mem_we;
         wb_waddr   <= mem_waddr;
         wb_result  <= mem_result;
         wb_hi      <= mem_hi;
         wb_lo      <= mem_lo;
         wb_whilo   <= mem_whilo;
+    end else begin
+        wb_we      <= wb_we;
+        wb_waddr   <= wb_waddr;
+        wb_result  <= wb_result;
+        wb_hi      <= wb_hi;
+        wb_lo      <= wb_lo;
+        wb_whilo   <= wb_whilo;
     end
 end
 

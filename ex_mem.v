@@ -16,6 +16,7 @@ module ex_mem (
     input   wire[`RegDataBus]   ex_hi,
     input   wire[`RegDataBus]   ex_lo,
     input   wire                ex_whilo,
+    input   wire[5:0]           stall,  
 
     //送访存阶段的信息
     output  reg[`RegDataBus]   mem_result,
@@ -34,13 +35,37 @@ always @(posedge clk) begin
         mem_hi     <= `ZeroWord;
         mem_lo     <= `ZeroWord;
         mem_whilo  <= `Disable;
-    end else begin
+    end 
+    /* 
+        执行阶段暂停，访存阶段继续
+     */
+    else if(stall[3] && !stall[4]) begin
+        mem_result <= `ZeroWord;
+        mem_we     <= `Disable;
+        mem_waddr  <= `RegAddr_0;
+        mem_hi     <= `ZeroWord;
+        mem_lo     <= `ZeroWord;
+        mem_whilo  <= `Disable;
+    end
+    /* 
+        执行阶段不暂停
+     */
+    else if(!stall[3]) begin
         mem_result <= ex_result;
         mem_we     <= ex_we;
         mem_waddr  <= ex_waddr;
         mem_hi     <= ex_hi;
         mem_lo     <= ex_lo;
         mem_whilo  <= ex_whilo;
+    end 
+    
+    else begin
+        mem_result <= mem_result;
+        mem_we     <= mem_we;
+        mem_waddr  <= mem_waddr;
+        mem_hi     <= mem_hi;
+        mem_lo     <= mem_lo;
+        mem_whilo  <= mem_whilo;
     end
 end
 

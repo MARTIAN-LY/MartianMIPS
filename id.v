@@ -40,7 +40,10 @@ module id (
     output  reg[`AluOpBus]      aluop_o,
     output  reg[`AluSelBus]     alusel_o,
     output  reg[`RegDataBus]    data1_o,
-    output  reg[`RegDataBus]    data2_o
+    output  reg[`RegDataBus]    data2_o,
+
+    //是否请求暂停流水线
+    output  reg                 stallreq
     
 );
 
